@@ -1,0 +1,4 @@
+click
+requests
+Jinja2
+openai
