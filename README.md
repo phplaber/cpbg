@@ -7,9 +7,16 @@ Children's picture book generator - 儿童绘本生成器
 
 ## 用法
 
-运行工具，需安装 Python 3.6+
+运行工具，需安装 Python 3.6+。同时依赖 Azure OpenAI 服务，所以需先在 Azure 平台上部署模型。部署完成后，设置如下环境变量：
 
-下载项目后，切换到项目目录。首先，使用 pip3 安装依赖包：
+```bash
+$ export azure_api_base="https://xxxx.openai.azure.com/" // 终结点
+$ export azure_api_key="xxxx"                            // 密钥
+$ export azure_api_version="2023-07-01-preview"          // API 版本
+$ export deployment_name="xxxx"                          // 部署名
+```
+
+下载项目后，切换到项目目录。使用 pip3 安装依赖包：
 
 ```bash
 $ pip3 install -r requirements.txt
