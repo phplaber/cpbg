@@ -88,7 +88,7 @@ def main(
             i = 1
             for content in contents:
                 response = openai.Image.create(
-                    prompt = f'【卡通画】{title}:{content}',
+                    prompt = f'【卡通风格】{content}' if i == 1 else f'【卡通风格】{title}{content}',
                     size = '1024x1024',
                     n = 1
                 )
@@ -134,7 +134,7 @@ def main(
                     temperature = 0.0,
                     messages = [
                         {"role": "system", "content": SYSTEM_PROMPT_FOR_COVERPAGE_HTML if i == 1 else SYSTEM_PROMPT_FOR_HTML},
-                        {"role": "user", "content": f'文本：{"《"+page.get("txt")+"》" if i == 1 else page.get("txt")}，图片地址：{fn}.png'}
+                        {"role": "user", "content": f'文本：{page.get("txt")}，图片地址：{fn}.png'}
                     ]
                 )
                 html_code = rsp['choices'][0]['message']['content']
@@ -149,7 +149,7 @@ def main(
 
                 time.sleep(0.1)
             
-            print(f'[+] 完成第{num}本绘本：《{title}》\n')
+            print(f'[+] 完成第{num}本绘本：{title}\n')
             num += 1
 
         print(f'[+] 完成全部绘本生成\n\n')
