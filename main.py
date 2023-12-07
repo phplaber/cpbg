@@ -4,7 +4,8 @@ import re
 import time
 import click
 import requests
-import openai
+import json
+from openai import AzureOpenAI
 from jinja2 import Template
 from prompts import (
     SYSTEM_PROMPT_FOR_DESIRE, 
@@ -34,27 +35,32 @@ def main(
     desire: str,
 ) -> None:
     if ctx.invoked_subcommand is None:
-        # 获取 Azure openai 配置
-        openai.api_type = "azure"
-        openai.api_base = os.getenv('azure_api_base')
-        openai.api_version = os.getenv('azure_api_version')
-        openai.api_key = os.getenv('azure_api_key')
-        engine = os.getenv('deployment_name')
+        # 创建 azure openai 客户端
+        gpt_client = AzureOpenAI(
+            azure_endpoint = os.getenv('azure_api_base'),
+            api_key = os.getenv('azure_api_key'),
+            api_version = "2023-07-01-preview"
+        )
+
+        dalle_client = AzureOpenAI(
+            azure_endpoint = os.getenv('azure_api_base'),
+            api_key = os.getenv('azure_api_key'),
+            api_version = "2023-12-01-preview"
+        )
 
         # 生成任务列表
         tasks = []
         if task:
             tasks.append(task)
         elif desire:
-            rsp = openai.ChatCompletion.create(
-                engine = engine,
-                temperature = 0.0,
+            completion = gpt_client.chat.completions.create(
+                model = os.getenv('gpt_deployment_name'),
                 messages = [
                     {"role": "system", "content": SYSTEM_PROMPT_FOR_DESIRE},
                     {"role": "user", "content": Template(USER_DESIRE_TPL).render(user_desire=desire)}
                 ]
             )
-            output = rsp['choices'][0]['message']['content']
+            output = json.loads(completion.model_dump_json())['choices'][0]['message']['content']
             tasks = re.findall(r"(?<=)-\s*(.*)", output)
         else:
             print('[*] 选项 --task 和 --desire 需至少设置一个')
@@ -64,16 +70,15 @@ def main(
         for task in tasks:
             print(f'[+] 正在生成第{num}本绘本...\n')
 
-            # 调 GPT 模型接口生成绘本内容
-            response = openai.ChatCompletion.create(
-                engine = engine,
-                temperature = 0.0,
+            # 调 GPT4 模型接口生成绘本内容
+            completion = gpt_client.chat.completions.create(
+                model = os.getenv('gpt_deployment_name'),
                 messages = [
                     {"role": "system", "content": SYSTEM_PROMPT_FOR_TXT},
                     {"role": "user", "content": Template(USER_PROMPT_TPL).render(user_task=task)}
                 ]
             )
-            output = response['choices'][0]['message']['content']
+            output = json.loads(completion.model_dump_json())['choices'][0]['message']['content']
 
             print(f'[+] 完成内容生成\n==========\n{output}\n')
 
@@ -82,17 +87,17 @@ def main(
             contents = re.findall(r"(?<=\n)-\s*(.*)", output)
             contents.insert(0, title)
 
-            # 调 DALL·E 模型接口生成绘本图片
+            # 调 DALL·E 3 模型接口生成绘本图片
             print(f'[+] 正在生成图片...\n==========\n')
             pb = []
             i = 1
             for content in contents:
-                response = openai.Image.create(
+                response = dalle_client.images.generate(
+                    model = os.getenv('dalle_deployment_name'),
                     prompt = f'【卡通风格】{content}' if i == 1 else f'【卡通风格】{title}{content}',
-                    size = '1024x1024',
-                    n = 1
+                    n=1
                 )
-                image_url = response["data"][0]["url"]
+                image_url = json.loads(response.model_dump_json())['data'][0]['url']
 
                 print(f'[{i}] 文本内容：{content} 图片地址：{image_url}\n')
 
@@ -128,16 +133,15 @@ def main(
                 with open(os.path.join(outputdir, f'{fn}.txt'), 'w') as f:
                     f.write(page.get('txt'))
 
-                # 调 GPT 模型接口生成 HTML 代码
-                rsp = openai.ChatCompletion.create(
-                    engine = engine,
-                    temperature = 0.0,
+                # 调 GPT4 模型接口生成 HTML 代码
+                completion = gpt_client.chat.completions.create(
+                    model = os.getenv('gpt_deployment_name'),
                     messages = [
                         {"role": "system", "content": SYSTEM_PROMPT_FOR_COVERPAGE_HTML if i == 1 else SYSTEM_PROMPT_FOR_HTML},
                         {"role": "user", "content": f'文本：{page.get("txt")}，图片地址：{fn}.png'}
                     ]
                 )
-                html_code = rsp['choices'][0]['message']['content']
+                html_code = json.loads(completion.model_dump_json())['choices'][0]['message']['content']
 
                 # 将 HTML 代码写入文件
                 with open(os.path.join(outputdir, f'{fn}.html'), 'w') as f:

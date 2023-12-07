@@ -12,8 +12,8 @@ Children's picture book generator - 儿童绘本生成器
 ```bash
 $ export azure_api_base="https://xxxx.openai.azure.com/" // 终结点
 $ export azure_api_key="xxxx"                            // 密钥
-$ export azure_api_version="2023-07-01-preview"          // API 版本
-$ export deployment_name="xxxx"                          // 部署名
+$ export gpt_deployment_name="xxxx"                      // GPT 4 模型部署名称
+$ export dalle_deployment_name="xxxx"                    // DALL-E 3 模型部署名称
 ```
 
 下载项目后，切换到项目目录。使用 pip3 安装依赖包：
@@ -38,9 +38,9 @@ Options:
 
 ## 原理
 
-首先，如果用户输入的是期望，则先通过该期望，结合系统提示，让 GPT 模型生成多个具体的任务。
+首先，如果用户输入的是期望，则先通过该期望，结合系统提示，让 GPT 4 模型生成多个具体的任务。
 
-其次，遍历这些任务。通过任务，结合系统提示，让 GPT 模型生成以任务为主题的内容，包括标题和段落。接着，依次以标题和段落为提示文本，让 DALL-E 模型生成相关图片。将图片下载到本地后，结合文字、图片和系统提示，让 GPT 模型将文字和图片结合，生成一个个 HTML 网页，即绘本页。
+其次，遍历这些任务。通过任务，结合系统提示，让 GPT 4 模型生成以任务为主题的内容，包括标题和段落。接着，依次以标题和段落为提示文本，让 DALL-E 3 模型生成相关图片。将图片下载到本地后，结合文字、图片和系统提示，让 GPT 4模型将文字和图片结合，生成一个个 HTML 网页，即绘本页。
 
 这样，就生成了一本绘声绘色的绘本了。
 
@@ -48,8 +48,5 @@ Options:
 
 ## 示例
 
-![小汽车的冒险之旅](/demo/01.png "小汽车的冒险之旅")
-![小汽车开出了车库](/demo/02.png "小汽车开出了车库")
-![它在马路上飞快的行驶](/demo/03.png "它在马路上飞快的行驶")
-
-完整绘本内容见 **demo** 目录。
+![第一关](/demo/04.png "第一关")
+![第三关](/demo/06.png "第三关")
