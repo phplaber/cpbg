@@ -36,16 +36,10 @@ def main(
 ) -> None:
     if ctx.invoked_subcommand is None:
         # 创建 azure openai 客户端
-        gpt_client = AzureOpenAI(
+        openai_client = AzureOpenAI(
             azure_endpoint = os.getenv('azure_api_base'),
             api_key = os.getenv('azure_api_key'),
-            api_version = "2023-07-01-preview"
-        )
-
-        dalle_client = AzureOpenAI(
-            azure_endpoint = os.getenv('azure_api_base'),
-            api_key = os.getenv('azure_api_key'),
-            api_version = "2023-12-01-preview"
+            api_version = os.getenv('azure_api_version')
         )
 
         # 生成任务列表
@@ -53,7 +47,7 @@ def main(
         if task:
             tasks.append(task)
         elif desire:
-            completion = gpt_client.chat.completions.create(
+            completion = openai_client.chat.completions.create(
                 model = os.getenv('gpt_deployment_name'),
                 messages = [
                     {"role": "system", "content": SYSTEM_PROMPT_FOR_DESIRE},
@@ -71,7 +65,7 @@ def main(
             print(f'[+] 正在生成第{num}本绘本...\n')
 
             # 调 GPT4 模型接口生成绘本内容
-            completion = gpt_client.chat.completions.create(
+            completion = openai_client.chat.completions.create(
                 model = os.getenv('gpt_deployment_name'),
                 messages = [
                     {"role": "system", "content": SYSTEM_PROMPT_FOR_TXT},
@@ -92,7 +86,7 @@ def main(
             pb = []
             i = 1
             for content in contents:
-                response = dalle_client.images.generate(
+                response = openai_client.images.generate(
                     model = os.getenv('dalle_deployment_name'),
                     prompt = f'【卡通风格】{content}' if i == 1 else f'【卡通风格】{title}{content}',
                     n=1
@@ -134,7 +128,7 @@ def main(
                     f.write(page.get('txt'))
 
                 # 调 GPT4 模型接口生成 HTML 代码
-                completion = gpt_client.chat.completions.create(
+                completion = openai_client.chat.completions.create(
                     model = os.getenv('gpt_deployment_name'),
                     messages = [
                         {"role": "system", "content": SYSTEM_PROMPT_FOR_COVERPAGE_HTML if i == 1 else SYSTEM_PROMPT_FOR_HTML},

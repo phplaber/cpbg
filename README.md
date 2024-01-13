@@ -12,6 +12,7 @@ Children's picture book generator - 儿童绘本生成器
 ```bash
 $ export azure_api_base="https://xxxx.openai.azure.com/" // 终结点
 $ export azure_api_key="xxxx"                            // 密钥
+$ export azure_api_version="xxxx"                        // 版本
 $ export gpt_deployment_name="xxxx"                      // GPT 4 模型部署名称
 $ export dalle_deployment_name="xxxx"                    // DALL-E 3 模型部署名称
 ```
